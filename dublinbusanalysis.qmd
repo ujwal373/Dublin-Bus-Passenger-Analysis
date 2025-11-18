@@ -25,6 +25,8 @@ execute:
 editor: visual
 ---
 
+Load the Libraries
+
 ```{r}
 library(readr)  
 library(dplyr) 
@@ -35,11 +37,44 @@ library(stringr)
 library(knitr)
 ```
 
+Load Dataset
+
 ```{r}
-bus_data <- read_csv("luas_og.csv")
+bus <- read_csv("DublinBus.csv")
+```
+
+Make a small subset of yearly dataset for year based analysis
+
+```{r}
+bus_yearly <- bus |>
+  filter(Month == "All months") |>
+  arrange(Year)
 ```
 
 ```{r}
-bus_data <- bus_data
-  select(-UNIT)
+ggplot(bus_yearly, aes(x = Year, y = VALUE)) +
+  geom_line(linewidth = 1.2, color = "steelblue") +
+  geom_point(size = 3) +
+  labs(
+    title = "Total Dublin Bus Passengers per Year (2014–2024)",
+    x = "Year",
+    y = "Total Passengers"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+bus_monthly <- bus |> 
+  filter(Month != "All months")
+
+ggplot(bus_monthly, aes(x = Month, y = VALUE, group = Year, color = factor(Year))) +
+  geom_line(alpha = 0.6) +
+  labs(
+    title = "Month–Wise Passenger Trends (2014–2024)",
+    x = "Month",
+    y = "Passengers",
+    color = "Year"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
