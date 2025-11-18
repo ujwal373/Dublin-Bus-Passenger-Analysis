@@ -24,3 +24,22 @@ execute:
   warning: false
 editor: visual
 ---
+
+```{r}
+library(readr)  
+library(dplyr) 
+library(tidyr) 
+library(ggplot2) 
+library(tibble) 
+library(stringr) 
+library(knitr)
+```
+
+```{r}
+bus_data <- read_csv("luas_og.csv")
+```
+
+```{r}
+bus_data <- bus_data
+  select(-UNIT)
+```
