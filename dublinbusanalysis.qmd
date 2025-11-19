@@ -25,7 +25,26 @@ execute:
 editor: visual
 ---
 
-Load the Libraries
+# **Introduction to the Project**
+
+The aim of this project is to study how Dublin Bus passenger numbers have changed over the last decade and use that trend to build a simple prediction model. Public transport is a good candidate for time-series analysis because it naturally carries seasonal patterns, long-term growth or decline, and changes due to external events like COVID-19.
+
+What this analysis really tries to answer is:\
+*“How did Dublin Bus usage evolve from 2014 to 2024, and can we model or forecast what happens next?”*
+
+To get there, I first break the dataset into two parts:
+
+-    **Yearly totals**, which show the overall trajectory of bus usage.
+
+-    **Monthly values**, which reveal seasonality and high-frequency patterns.
+
+Once the structure is clear, I can run exploratory plots, identify jumps or dips, and finally apply a time-series model (likely ARIMA or ETS) to see how well it predicts future passenger numbers. The end goal is simple: test a forecasting method on real Irish transport data, understand its behaviour, and compare the predicted values with actual trends to judge performance.
+
+------------------------------------------------------------------------
+
+\newpage
+
+# Libraries and packages for the Project.
 
 ```{r}
 library(readr)  
@@ -37,13 +56,43 @@ library(stringr)
 library(knitr)
 ```
 
-Load Dataset
+These libraries support the workflow from data loading to visualisation:
+
+-    `readr` — fast, reliable reading of CSV files. Helps avoid formatting issues.
+
+-    `dplyr` — the core toolkit for filtering rows, selecting variables, grouping by year, and cleaning data.
+
+-    `tidyr` — for reshaping data if needed (though light usage here).
+
+-    `ggplot2` — the primary plotting library for creating yearly and monthly trend graphs.
+
+-    `stringr` — useful for cleaning Month names and ensuring consistent formatting.
+
+-    `tibble` — provides tidy printing and structured tables.
+
+-    `knitr` — controls how tables or summaries are printed inside the PDF.
+
+These tools together cover almost everything required: load data, clean it, structure it, plot it, and interpret it.
+
+# Part 1: Manipulation
+
+## Load `dublin_bus_data` dataset.
+
+This dataset is available from the Central Statistics Office.[^1]
+
+[^1]: The Dublin bus data set for the project (Year 2014-2024): <https://data.cso.ie/table/TOA14>
 
 ```{r}
 bus <- read_csv("DublinBus.csv")
 ```
 
-Make a small subset of yearly dataset for year based analysis
+Before any modelling, the dataset needs to be organised into a structure that makes sense for analysis. Since the raw file mixes both month-level rows and a yearly summary labelled as “All months,” the first step is to separate them. This helps us view the big picture (yearly totals) and the detailed behaviour (month-level changes).
+
+Cleaning also ensures the Month column is properly ordered instead of being alphabetical, which would distort any time-series plot. Once the datasets are organised, visualising them gives a straightforward sense of how Dublin Bus demand has changed over time.
+
+## Organize the Dataset by Year and Visualize Trends.
+
+Before forecasting, it helps to see the overall yearly movement.
 
 ```{r}
 bus_yearly <- bus |>
