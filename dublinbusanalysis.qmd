@@ -54,6 +54,7 @@ library(ggplot2)
 library(tibble) 
 library(stringr) 
 library(knitr)
+library(reshape2)
 ```
 
 These libraries support the workflow from data loading to visualisation:
@@ -92,15 +93,18 @@ Cleaning also ensures the Month column is properly ordered instead of being alph
 
 ## Organize the Dataset by Year and Visualize Trends.
 
-Before forecasting, it helps to see the overall yearly movement.
-
 ```{r}
 bus_yearly <- bus |>
   filter(Month == "All months") |>
   arrange(Year)
 ```
 
+## Finding some trend in yearly data.
+
+Let's see the yearly trends across the bus network.
+
 ```{r}
+options(scipen = 10)
 ggplot(bus_yearly, aes(x = Year, y = VALUE)) +
   geom_line(linewidth = 1.2, color = "steelblue") +
   geom_point(size = 3) +
@@ -112,7 +116,31 @@ ggplot(bus_yearly, aes(x = Year, y = VALUE)) +
   theme_minimal()
 ```
 
+This plot gives a decade-level view of how Dublin Bus usage has shifted over time. The first thing that stands out is the steady climb from 2014 to around 2018–2019. That’s typical of a growing city: population increases, more commuters rely on buses, and service frequency expands.
+
+Then the graph falls off a cliff in 2020. That drop isn’t random — it reflects the impact of COVID-19, lockdowns, and restricted movement. Almost every public transport system in the world saw the same collapse, so this sharp decline validates the dataset rather than raising any concerns.
+
+From 2021 onward, the recovery is visible. It’s not instant; there’s a slow rebuild in 2021, a strong jump in 2022, and by 2024 the numbers almost return to the pre-pandemic peak. This pattern tells you two things:
+
+1.   The system is resilient.
+
+2.   Passenger numbers respond quickly once restrictions lift.
+
+This yearly view sets the foundation for forecasting later. If the rebound continues at the same pace, future passenger counts might even surpass earlier highs.
+
+## Organize the Dataset by Month and Visualize Trends.
+
 ```{r}
+bus_monthly <- bus |> 
+  filter(Month != "All months")
+```
+
+## Finding some trend in monthly data.
+
+Let's see the monthly trends across the bus network.
+
+```{r}
+options(scipen = 10)
 bus_monthly <- bus |> 
   filter(Month != "All months")
 
@@ -127,3 +155,54 @@ ggplot(bus_monthly, aes(x = Month, y = VALUE, group = Year, color = factor(Year)
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
+This plot switches from yearly behaviour to monthly patterns. Here, every line represents a full year, and the spread shows how seasonality, disruptions, or external factors impact ridership.
+
+Strong patterns emerge immediately:
+
+-    **The top cluster (2018–2019, 2023–2024)** shows the high-demand years.
+
+-    **The flat, low-lying 2020–2021 lines** match the pandemic slowdown seen in the yearly plot.
+
+-    **Most normal years share the same general shape**, which tells you that bus usage follows a seasonal cycle: some months reliably draw higher ridership, and others consistently dip.
+
+You can also see that even though the months are plotted in alphabetical order in the figure (as your dataset names are currently structured), seasonal effects still appear: mid-year behaviour contrasts with winter months.
+
+Once months are ordered correctly (Jan → Dec), this plot will reveal even cleaner seasonal waves.
+
+This graph is also extremely useful for forecasting, because any time-series model needs to understand the repeating seasonal structure. The differences between pre-COVID, COVID, and post-COVID years also give a strong signal of structural breaks — something a model like ARIMA or ETS must account for.
+
+## Finding trends in combined datasets.
+
+Till now we observed some similar insights in both of the datasets, lets play with heat map and find out what we get from it (expecting some hidden insights)
+
+```{r}
+options(scipen = 10)
+ggplot(bus_monthly, aes(x = Month, y = factor(Year), fill = VALUE)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(
+    title = "Heatmap of Dublin Bus Passengers (Month vs Year)",
+    x = "Month",
+    y = "Year",
+    fill = "Passengers"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+This heatmap gives a quick, intuitive view of how passenger volumes vary across both months and years. Instead of tracing lines or comparing separate plots, you can see the entire decade’s behaviour in one glance.
+
+The colour intensity does most of the talking here. Darker shades represent higher passenger counts, while lighter shades show dips or unusual drops.
+
+A few patterns stand out immediately:
+
+-    **2020 and 2021 appear as the lightest rows**, confirming the massive collapse in ridership during the COVID-19 period. This matches the sharp drop seen in the yearly trend plot.
+
+-    **Years like 2018, 2019, 2023, and 2024 are consistently darker**, signalling high demand and strong bus usage.
+
+-    **Across most years, the month-to-month colour pattern looks fairly stable**, which means Dublin Bus follows a reliable seasonal rhythm every year. Even though the months are currently in alphabetical order in the plot, the colour distribution still hints at recurring patterns in certain months.
+
+-    The **progressive darkening from 2022 to 2024** shows the system recovering back to pre-pandemic levels, not just yearly but month-by-month.
+
+**What this heatmap really delivers is clarity:** it compresses the entire dataset into a visual fingerprint of Dublin Bus usage over time. This makes it much easier to spot structural breaks, seasonal consistency, and recovery trends — all of which will matter once we start building the forecasting model.
