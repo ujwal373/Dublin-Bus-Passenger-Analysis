@@ -34,9 +34,9 @@ What this analysis really tries to answer is:\
 
 To get there, I first break the dataset into two parts:
 
--    **Yearly totals**, which show the overall trajectory of bus usage.
+-   **Yearly totals**, which show the overall trajectory of bus usage.
 
--    **Monthly values**, which reveal seasonality and high-frequency patterns.
+-   **Monthly values**, which reveal seasonality and high-frequency patterns.
 
 Once the structure is clear, I can run exploratory plots, identify jumps or dips, and finally apply a time-series model (likely ARIMA or ETS) to see how well it predicts future passenger numbers. The end goal is simple: test a forecasting method on real Irish transport data, understand its behaviour, and compare the predicted values with actual trends to judge performance.
 
@@ -59,19 +59,19 @@ library(reshape2)
 
 These libraries support the workflow from data loading to visualisation:
 
--    `readr` — fast, reliable reading of CSV files. Helps avoid formatting issues.
+-   `readr` — fast, reliable reading of CSV files. Helps avoid formatting issues.
 
--    `dplyr` — the core toolkit for filtering rows, selecting variables, grouping by year, and cleaning data.
+-   `dplyr` — the core toolkit for filtering rows, selecting variables, grouping by year, and cleaning data.
 
--    `tidyr` — for reshaping data if needed (though light usage here).
+-   `tidyr` — for reshaping data if needed (though light usage here).
 
--    `ggplot2` — the primary plotting library for creating yearly and monthly trend graphs.
+-   `ggplot2` — the primary plotting library for creating yearly and monthly trend graphs.
 
--    `stringr` — useful for cleaning Month names and ensuring consistent formatting.
+-   `stringr` — useful for cleaning Month names and ensuring consistent formatting.
 
--    `tibble` — provides tidy printing and structured tables.
+-   `tibble` — provides tidy printing and structured tables.
 
--    `knitr` — controls how tables or summaries are printed inside the PDF.
+-   `knitr` — controls how tables or summaries are printed inside the PDF.
 
 These tools together cover almost everything required: load data, clean it, structure it, plot it, and interpret it.
 
@@ -103,7 +103,7 @@ bus_yearly <- bus |>
 
 Let's see the yearly trends across the bus network.
 
-```{r}
+```{r fig.width= 10, fig.height=4}
 options(scipen = 10)
 ggplot(bus_yearly, aes(x = Year, y = VALUE)) +
   geom_line(linewidth = 1.2, color = "steelblue") +
@@ -122,9 +122,9 @@ Then the graph falls off a cliff in 2020. That drop isn’t random — it reflec
 
 From 2021 onward, the recovery is visible. It’s not instant; there’s a slow rebuild in 2021, a strong jump in 2022, and by 2024 the numbers almost return to the pre-pandemic peak. This pattern tells you two things:
 
-1.   The system is resilient.
+1.  The system is resilient.
 
-2.   Passenger numbers respond quickly once restrictions lift.
+2.  Passenger numbers respond quickly once restrictions lift.
 
 This yearly view sets the foundation for forecasting later. If the rebound continues at the same pace, future passenger counts might even surpass earlier highs.
 
@@ -139,7 +139,7 @@ bus_monthly <- bus |>
 
 Let's see the monthly trends across the bus network.
 
-```{r}
+```{r fig.width= 10, fig.height=4}
 options(scipen = 10)
 bus_monthly <- bus |> 
   filter(Month != "All months")
@@ -160,11 +160,11 @@ This plot switches from yearly behaviour to monthly patterns. Here, every line r
 
 Strong patterns emerge immediately:
 
--    **The top cluster (2018–2019, 2023–2024)** shows the high-demand years.
+-   **The top cluster (2018–2019, 2023–2024)** shows the high-demand years.
 
--    **The flat, low-lying 2020–2021 lines** match the pandemic slowdown seen in the yearly plot.
+-   **The flat, low-lying 2020–2021 lines** match the pandemic slowdown seen in the yearly plot.
 
--    **Most normal years share the same general shape**, which tells you that bus usage follows a seasonal cycle: some months reliably draw higher ridership, and others consistently dip.
+-   **Most normal years share the same general shape**, which tells you that bus usage follows a seasonal cycle: some months reliably draw higher ridership, and others consistently dip.
 
 You can also see that even though the months are plotted in alphabetical order in the figure (as your dataset names are currently structured), seasonal effects still appear: mid-year behaviour contrasts with winter months.
 
@@ -176,7 +176,7 @@ This graph is also extremely useful for forecasting, because any time-series mod
 
 Till now we observed some similar insights in both of the datasets, lets play with heat map and find out what we get from it (expecting some hidden insights)
 
-```{r}
+```{r fig.width= 10, fig.height=4}
 options(scipen = 10)
 ggplot(bus_monthly, aes(x = Month, y = factor(Year), fill = VALUE)) +
   geom_tile(color = "white") +
@@ -197,12 +197,12 @@ The colour intensity does most of the talking here. Darker shades represent high
 
 A few patterns stand out immediately:
 
--    **2020 and 2021 appear as the lightest rows**, confirming the massive collapse in ridership during the COVID-19 period. This matches the sharp drop seen in the yearly trend plot.
+-   **2020 and 2021 appear as the lightest rows**, confirming the massive collapse in ridership during the COVID-19 period. This matches the sharp drop seen in the yearly trend plot.
 
--    **Years like 2018, 2019, 2023, and 2024 are consistently darker**, signalling high demand and strong bus usage.
+-   **Years like 2018, 2019, 2023, and 2024 are consistently darker**, signalling high demand and strong bus usage.
 
--    **Across most years, the month-to-month colour pattern looks fairly stable**, which means Dublin Bus follows a reliable seasonal rhythm every year. Even though the months are currently in alphabetical order in the plot, the colour distribution still hints at recurring patterns in certain months.
+-   **Across most years, the month-to-month colour pattern looks fairly stable**, which means Dublin Bus follows a reliable seasonal rhythm every year. Even though the months are currently in alphabetical order in the plot, the colour distribution still hints at recurring patterns in certain months.
 
--    The **progressive darkening from 2022 to 2024** shows the system recovering back to pre-pandemic levels, not just yearly but month-by-month.
+-   The **progressive darkening from 2022 to 2024** shows the system recovering back to pre-pandemic levels, not just yearly but month-by-month.
 
 **What this heatmap really delivers is clarity:** it compresses the entire dataset into a visual fingerprint of Dublin Bus usage over time. This makes it much easier to spot structural breaks, seasonal consistency, and recovery trends — all of which will matter once we start building the forecasting model.
