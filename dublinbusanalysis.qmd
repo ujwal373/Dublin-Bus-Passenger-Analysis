@@ -249,9 +249,12 @@ If seasonality changes over time → TBATS is more suitable.
 
 This step tells us which model will work best in Phase 3
 
+\newpage
+
 ### Classical Decomposition
 
-```{r}
+```{r fig.width= 10, fig.height=4}
+options(scipen = 10)
 decomp_classical <- decompose(ts_bus, type = "multiplicative")
 plot(decomp_classical)
 ```
@@ -280,9 +283,12 @@ Here’s what stands out:
 
 -   This indicates a structural disruption (again, COVID-19), which makes forecasting harder unless the model can absorb such shocks.
 
+\newpage
+
 ### **STL Decomposition (More Flexible)**
 
-```{r}
+```{r fig.width= 10, fig.height=4}
+options(scipen = 10)
 decomp_stl <- stl(ts_bus, s.window = "periodic")
 plot(decomp_stl)
 ```
@@ -311,6 +317,8 @@ STL decomposition gives a cleaner, more flexible breakdown.
 
 The STL plot confirms that although the seasonal pattern is clean, the trend and residual components contain a strong shock that we must handle carefully during modelling. Models that assume a smooth trend (like ETS) may be affected unless tuned properly.
 
+\newpage
+
 ## Stationarity Check (ACF/PACF + ADF Test)
 
 Forecasting models make assumptions about the series:
@@ -327,7 +335,7 @@ This section tells us how many parameters ARIMA will use in Phase 3, and whether
 
 **ACF & PACF Plots**
 
-```{r}
+```{r fig.width= 10, fig.height=4}
 acf(ts_bus)
 pacf(ts_bus)
 ```
@@ -364,7 +372,7 @@ Combined with the ACF result, this supports an **ARIMA model** rather than a pur
 
 **ADF Test**
 
-```{r}
+```{r fig.width= 10, fig.height=4}
 adf.test(ts_bus)
 ```
 
