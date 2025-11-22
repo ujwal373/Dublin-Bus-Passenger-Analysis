@@ -434,3 +434,45 @@ length(train_ts); length(test_ts)  # sanity check
 
 **Why this split?**\
 Models learn on “normal + shock + recovery” (incl. COVID), and we check whether they can correctly predict the most recent 2 years.
+
+## ARIMA Model (auto.arima)
+
+```{r}
+fit_arima <- auto.arima(
+train_ts,
+seasonal = TRUE,
+stepwise = FALSE,
+approximation = FALSE
+)
+
+fit_arima
+```
+
+```{r}
+fc_arima <- forecast(fit_arima, h = length(test_ts))
+
+autoplot(fc_arima) +
+autolayer(test_ts, series = "Actual") +
+ggplot2::labs(
+title = "ARIMA Forecast vs Actual (Test Period)",
+y = "Passengers", x = "Year"
+)
+```
+
+## ETS Model
+
+```{r}
+fit_ets <- ets(train_ts)
+fit_ets
+```
+
+```{r}
+fc_ets <- forecast(fit_ets, h = length(test_ts))
+
+autoplot(fc_ets) +
+autolayer(test_ts, series = "Actual") +
+ggplot2::labs(
+title = "ETS Forecast vs Actual (Test Period)",
+y = "Passengers", x = "Year"
+)
+```
