@@ -208,7 +208,7 @@ A few patterns stand out immediately:
 
 **What this heatmap really delivers is clarity:** it compresses the entire dataset into a visual fingerprint of Dublin Bus usage over time. This makes it much easier to spot structural breaks, seasonal consistency, and recovery trends — all of which will matter once we start building the forecasting model.
 
-# Part 2: Time-Series Preparation & Decomposiition
+# Part 2: Time-Series Preparation & Decomposition
 
 Phase 2 shifts the analysis from raw trends to a structured time-series approach. The goal here is to convert the monthly passenger data into a format that a forecasting model can understand. Once the data is converted into a proper time-series object, we can break it into its components: trend, seasonality, and noise; which gives us a clear picture of what drives bus demand over the years. This step is essential because the strength and stability of these components will decide which forecasting method works best in Phase 3.
 
@@ -217,11 +217,11 @@ Phase 2 shifts the analysis from raw trends to a structured time-series approach
 A forecasting model can’t work on a normal data frame.\
 It needs a structured object with:
 
--    a **start point** (2014, month 1)
+-   a **start point** (2014, month 1)
 
--    a **frequency** (12 for monthly data)
+-   a **frequency** (12 for monthly data)
 
--    a **uniform spacing** (no missing months)
+-   a **uniform spacing** (no missing months)
 
 Once converted, R can apply decomposition, autocorrelation checks, and forecasting techniques.
 
@@ -237,11 +237,11 @@ ts_bus <- ts(bus_monthly$VALUE, start = c(2014, 1), frequency = 12)
 
 Here’s the thing: before forecasting, we need to see what the data is actually made of. Decomposition splits the passenger numbers into:
 
--    **Trend** – long-term direction
+-   **Trend** – long-term direction
 
--    **Seasonality** – recurring monthly cycle
+-   **Seasonality** – recurring monthly cycle
 
--    **Residuals/Noise** – random behaviour
+-   **Residuals/Noise** – random behaviour
 
 If seasonality is strong and clean → ETS performs well.\
 If trend shifts sharply → ARIMA may be better.\
@@ -265,21 +265,21 @@ Here’s what stands out:
 
 **Trend component**
 
--    From 2014 to about 2019, the trend rises steadily — consistent with the growth seen in earlier plots.
+-   From 2014 to about 2019, the trend rises steadily — consistent with the growth seen in earlier plots.
 
--    A dramatic collapse happens around 2020, which matches the COVID-19 shock.
+-   A dramatic collapse happens around 2020, which matches the COVID-19 shock.
 
--    After 2021, the trend begins recovering sharply and moves back toward pre-pandemic levels.
+-   After 2021, the trend begins recovering sharply and moves back toward pre-pandemic levels.
 
 **Seasonal component**
 
--    The seasonal pattern is strong and highly regular: each year repeats similar ups and downs.
+-   The seasonal pattern is strong and highly regular: each year repeats similar ups and downs.
 
--    This confirms **strong monthly seasonality**, which any forecasting model must account for.
+-   This confirms **strong monthly seasonality**, which any forecasting model must account for.
 
 **Random component**
 
--    The random component becomes unusually volatile during 2020–2021.
+-   The random component becomes unusually volatile during 2020–2021.
 
 -   This indicates a structural disruption (again, COVID-19), which makes forecasting harder unless the model can absorb such shocks.
 
@@ -297,23 +297,23 @@ STL decomposition gives a cleaner, more flexible breakdown.
 
 **Seasonal pattern**
 
--    The seasonal component is extremely stable and identical every year.
+-   The seasonal component is extremely stable and identical every year.
 
--    This proves the series has **fixed, strong, and predictable seasonality**.
+-   This proves the series has **fixed, strong, and predictable seasonality**.
 
 **Trend**
 
--    The same story appears: a long rise → sudden crash → rapid recovery.
+-   The same story appears: a long rise → sudden crash → rapid recovery.
 
--    STL shows this transition smoother and more clearly than the classical version.
+-   STL shows this transition smoother and more clearly than the classical version.
 
 **Remainder (residual)**
 
--    The remainder explodes during 2020–2021 (big bars up and down).
+-   The remainder explodes during 2020–2021 (big bars up and down).
 
--    This again highlights the outlier effect of COVID.
+-   This again highlights the outlier effect of COVID.
 
--    Post-2022, the remainder stabilises again.
+-   Post-2022, the remainder stabilises again.
 
 The STL plot confirms that although the seasonal pattern is clean, the trend and residual components contain a strong shock that we must handle carefully during modelling. Models that assume a smooth trend (like ETS) may be affected unless tuned properly.
 
@@ -323,13 +323,13 @@ The STL plot confirms that although the seasonal pattern is clean, the trend and
 
 Forecasting models make assumptions about the series:
 
--    Is it **stationary**? (stable mean/variance)
+-   Is it **stationary**? (stable mean/variance)
 
--    How much **autocorrelation** exists?
+-   How much **autocorrelation** exists?
 
--    Do we need differencing?
+-   Do we need differencing?
 
--    Does the data have strong lag effects?
+-   Does the data have strong lag effects?
 
 This section tells us how many parameters ARIMA will use in Phase 3, and whether we should prefer ETS or TBATS instead.
 
@@ -344,25 +344,25 @@ The ACF plot shows how strongly each month correlates with earlier months.
 
 **What we see:**
 
--    Very high autocorrelation at small lags.
+-   Very high autocorrelation at small lags.
 
--    Slow, almost linear decay over many lags.
+-   Slow, almost linear decay over many lags.
 
--    No sudden drop-off.
+-   No sudden drop-off.
 
 This is typical of a **non-stationary series with trend**, because the series remembers its past heavily.
 
 **What this implies:**
 
--    **Differencing is needed** before ARIMA can be applied.
+-   **Differencing is needed** before ARIMA can be applied.
 
--    Seasonal differencing might also be necessary due to the 12-month pattern.
+-   Seasonal differencing might also be necessary due to the 12-month pattern.
 
 PACF tells us how many AR (autoregressive) terms might be necessary.
 
 **Key observations:**
 
--    A strong spike at lag 1.
+-   A strong spike at lag 1.
 
 -   All other lags are small and not significant.
 
@@ -382,21 +382,55 @@ Our here what we can observe is;
 
 **What it means:**
 
--    The series is **not stationary**.
+-   The series is **not stationary**.
 
--    There is significant trend and seasonality.
+-   There is significant trend and seasonality.
 
--    ARIMA cannot be fitted directly — **differencing is required**.
+-   ARIMA cannot be fitted directly — **differencing is required**.
 
 **What type of differencing?**
 
 Given our insights:
 
--    **1 non-seasonal difference (d = 1)**
+-   **1 non-seasonal difference (d = 1)**
 
--    **1 seasonal difference (D = 1)** with period = 12\
+-   **1 seasonal difference (D = 1)** with period = 12\
     are both very likely.
 
 This will stabilise mean and seasonality.
 
 ------------------------------------------------------------------------
+
+# Part 3: Forecasting
+
+Phase 3 turns the prepared time-series into actual forecasts. The idea is simple:
+
+1.   train models on the past,
+
+2.   test them on recent years,
+
+3.   pick the one that predicts best,
+
+4.   use it to forecast 2025–2026
+
+We’ll compare two core models:
+
+-    **ARIMA** – good for trend + seasonal structure with shocks
+
+-    **ETS** – exponential smoothing with explicit trend/seasonality
+
+## Train–Test Split
+
+Use 2014–2022 as training, 2023–2024 as test.
+
+```{r}
+library(forecast)
+
+train_ts <- window(ts_bus, end = c(2022, 12))
+test_ts  <- window(ts_bus, start = c(2023, 1))
+
+length(train_ts); length(test_ts)  # sanity check
+```
+
+**Why this split?**\
+Models learn on “normal + shock + recovery” (incl. COVID), and we check whether they can correctly predict the most recent 2 years.
