@@ -405,19 +405,19 @@ This will stabilise mean and seasonality.
 
 Phase 3 turns the prepared time-series into actual forecasts. The idea is simple:
 
-1.   train models on the past,
+1.  train models on the past,
 
-2.   test them on recent years,
+2.  test them on recent years,
 
-3.   pick the one that predicts best,
+3.  pick the one that predicts best,
 
-4.   use it to forecast 2025–2026
+4.  use it to forecast 2025–2026
 
 We’ll compare two core models:
 
--    **ARIMA** – good for trend + seasonal structure with shocks
+-   **ARIMA** – good for trend + seasonal structure with shocks
 
--    **ETS** – exponential smoothing with explicit trend/seasonality
+-   **ETS** – exponential smoothing with explicit trend/seasonality
 
 ## Train–Test Split
 
@@ -448,7 +448,31 @@ approximation = FALSE
 fit_arima
 ```
 
-```{r}
+**Model chosen:**\
+`ARIMA(0,1,0)` → also known as a *random walk with drift removed*. This is the simplest ARIMA structure possible. It says:
+
+-    the model applies **one difference** (d = 1)
+
+-    no autoregressive part (p = 0)
+
+-    no moving-average part (q = 0)
+
+-    the differenced series behaves like pure noise
+
+In plain English; **the model thinks the best predictor of the next month is simply the previous month**, plus random fluctuation.
+
+This happens because:
+
+-    the series has a strong trend
+
+-    seasonality was removed when you converted to multiplicative structure
+
+-    the pandemic shock made AR and MA terms unstable
+
+**AIC = 3285.79**\
+Lower AIC is better, and this is what ARIMA achieved.
+
+```{r fig.width= 10, fig.height=4}
 fc_arima <- forecast(fit_arima, h = length(test_ts))
 
 autoplot(fc_arima) +
@@ -459,6 +483,16 @@ y = "Passengers", x = "Year"
 )
 ```
 
+In the first plot:
+
+-   the **blue forecast line** stays fairly flat because ARIMA(0,1,0) doesn’t impose any seasonal curve
+
+-   the **actual 2023–2024 test data** follows a clear rising seasonal wave
+
+-   ARIMA underestimates the shape, even though the mean level is somewhat reasonable
+
+-   wide confidence intervals show uncertainty due to the shock period (2020–2021)
+
 ## ETS Model
 
 ```{r}
@@ -466,7 +500,16 @@ fit_ets <- ets(train_ts)
 fit_ets
 ```
 
-```{r}
+**Model chosen:**\
+`ETS(A,N,N)` → Additive error, No trend, No seasonality.
+
+This is extremely simplified. It tries to smooth the data but doesn’t model rise, fall, or repeating monthly patterns.
+
+**alpha = 0.9999** This means ETS is basically copying the last observed value (almost no smoothing).
+
+**AIC = 3518.98** This is noticeably **higher** than ARIMA’s AIC (3285.79). Higher AIC → **worse model fit**.
+
+```{r fig.width= 10, fig.height=4}
 fc_ets <- forecast(fit_ets, h = length(test_ts))
 
 autoplot(fc_ets) +
@@ -476,3 +519,36 @@ title = "ETS Forecast vs Actual (Test Period)",
 y = "Passengers", x = "Year"
 )
 ```
+
+In the second plot:
+
+-    ETS also produces a flat prediction line
+
+-    uncertainty bands again widen due to the trend shock
+
+-    the fit to actual test data is slightly poorer than ARIMA
+
+-    ETS cannot capture trend recovery after COVID
+
+-    zero seasonality assumption makes the model too naive
+
+ETS(A,N,N) is too simple for this dataset; it lacks trend + seasonality. It performs **worse than ARIMA** in both AIC and visual accuracy.
+
+**Final Findings:**
+
+-   ARIMA outperformed ETS on both AIC and visual fit, but both models lack seasonality.
+
+```{=html}
+<!-- -->
+```
+-    The reason is that the month order in the dataset is alphabetical, not chronological.
+
+```{=html}
+<!-- -->
+```
+-    Reordering the months (Jan → Dec) will allow ARIMA and ETS to pick the correct seasonal structure.
+
+```{=html}
+<!-- -->
+```
+-    Once fixed, the seasonal ARIMA (SARIMA) model will likely outperform ETS on both short-term and long-term forecasts.
