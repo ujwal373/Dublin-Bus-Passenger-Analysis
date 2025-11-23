@@ -56,6 +56,7 @@ library(stringr)
 library(knitr)
 library(reshape2)
 library(tseries)
+library(forecast)
 ```
 
 These libraries support the workflow from data loading to visualisation:
@@ -73,6 +74,10 @@ These libraries support the workflow from data loading to visualisation:
 -   `tibble` — provides tidy printing and structured tables.
 
 -   `knitr` — controls how tables or summaries are printed inside the PDF.
+
+-   `forecast` — For time series forecasting models like *ARIMA and TBATS*.
+
+-   `tseries` — Provides statistical tests essential for time-series analysis.
 
 These tools together cover almost everything required: load data, clean it, structure it, plot it, and interpret it.
 
@@ -426,8 +431,6 @@ We’ll compare two core models:
 Use 2014–2022 as training, 2023–2024 as test.
 
 ```{r}
-library(forecast)
-
 train_ts <- window(ts_bus, end = c(2022, 12))
 test_ts  <- window(ts_bus, start = c(2023, 1))
 
@@ -494,6 +497,8 @@ In the first plot:
 -   ARIMA underestimates the shape, even though the mean level is somewhat reasonable
 
 -   wide confidence intervals show uncertainty due to the shock period (2020–2021)
+
+\newpage
 
 ## ETS Model
 
