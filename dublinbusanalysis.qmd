@@ -208,6 +208,8 @@ A few patterns stand out immediately:
 
 **What this heatmap really delivers is clarity:** it compresses the entire dataset into a visual fingerprint of Dublin Bus usage over time. This makes it much easier to spot structural breaks, seasonal consistency, and recovery trends — all of which will matter once we start building the forecasting model.
 
+------------------------------------------------------------------------
+
 # Part 2: Time-Series Preparation & Decomposition
 
 Phase 2 shifts the analysis from raw trends to a structured time-series approach. The goal here is to convert the monthly passenger data into a format that a forecasting model can understand. Once the data is converted into a proper time-series object, we can break it into its components: trend, seasonality, and noise; which gives us a clear picture of what drives bus demand over the years. This step is essential because the strength and stability of these components will decide which forecasting method works best in Phase 3.
@@ -552,3 +554,145 @@ ETS(A,N,N) is too simple for this dataset; it lacks trend + seasonality. It perf
 <!-- -->
 ```
 -    Once fixed, the seasonal ARIMA (SARIMA) model will likely outperform ETS on both short-term and long-term forecasts.
+
+## SARIMA Model
+
+The earlier ARIMA model ignored seasonality. Here we allow a seasonal structure with yearly period 12, letting the model capture monthly patterns on top of the long-term trend.
+
+```{r}
+fit_sarima <- auto.arima(
+train_ts,
+seasonal = TRUE,
+D = 1, # seasonal differencing
+stepwise = FALSE,
+approximation = FALSE
+)
+
+summary(fit_sarima)
+```
+
+```{r fig.width= 10, fig.height=4}
+fc_sarima <- forecast(fit_sarima, h = length(test_ts))
+
+autoplot(fc_sarima) +
+autolayer(test_ts, series = "Actual") +
+ggplot2::labs(
+title = "SARIMA Forecast vs Actual (Test Period)",
+y = "Passengers", x = "Year"
+)
+```
+
+## TBATS
+
+TBATS is designed for time series with strong seasonality and structural breaks. It is a good candidate here because the COVID period temporarily destroys the usual pattern.
+
+```{r}
+fit_tbats <- tbats(train_ts)
+summary(fit_tbats)
+```
+
+```{r fig.width= 10, fig.height=4}
+fc_tbats <- forecast(fit_tbats, h = length(test_ts))
+
+autoplot(fc_tbats) +
+autolayer(test_ts, series = "Actual") +
+ggplot2::labs(
+title = "TBATS Forecast vs Actual (Test Period)",
+y = "Passengers", x = "Year"
+)
+```
+
+## Accuracy between all 4 models
+
+```{r}
+acc_simple_arima <- accuracy(fc_arima,  test_ts)
+acc_ets          <- accuracy(fc_ets,    test_ts)
+acc_sarima       <- accuracy(fc_sarima, test_ts)
+acc_tbats        <- accuracy(fc_tbats,  test_ts)
+
+acc_comp <- tibble::tibble(
+Model = c("ARIMA(0,1,0)", "ETS(A,N,N)", "SARIMA", "TBATS"),
+RMSE  = c(acc_simple_arima["Test set","RMSE"],
+acc_ets["Test set","RMSE"],
+acc_sarima["Test set","RMSE"],
+acc_tbats["Test set","RMSE"]),
+MAE   = c(acc_simple_arima["Test set","MAE"],
+acc_ets["Test set","MAE"],
+acc_sarima["Test set","MAE"],
+acc_tbats["Test set","MAE"]),
+MAPE  = c(acc_simple_arima["Test set","MAPE"],
+acc_ets["Test set","MAPE"],
+acc_sarima["Test set","MAPE"],
+acc_tbats["Test set","MAPE"])
+)
+
+knitr::kable(acc_comp, digits = 2,
+caption = "Forecast accuracy on 2023–2024 test period")
+```
+
+**1. ARIMA(0,1,0)**
+
+This is the simplest possible ARIMA model — essentially a *random walk with one difference*.\
+It doesn’t include seasonal or autoregressive terms.
+
+-    **RMSE:** 2.19M
+
+-    **MAPE:** 15.12%
+
+-    **Strength:** stable long-term level
+
+-    **Weakness:** fails to capture seasonal peaks & troughs
+
+**Overall:** Acceptable baseline but too simple for monthly bus data.
+
+**2. ETS(A,N,N)**
+
+ETS selected an additive model with **no trend** and **no seasonality**, meaning it smooths the data but doesn’t learn any structure.
+
+-    **RMSE:** 2.19M
+
+-    **MAPE:** 15.12% (same as ARIMA)
+
+-    **Strength:** follows short-term movement well
+
+-    **Weakness:** ignores both trend and seasonality entirely
+
+**Overall:** Slightly smoother than ARIMA but equally simplistic.
+
+**3. SARIMA(1,0,0)(2,1,0)\[12\]**
+
+This model includes seasonal differencing and seasonal AR terms, so it actively tries to model monthly seasonality.
+
+However, because COVID caused a large structural break, SARIMA overfits the shock period and ends up performing *worse* on the test data.
+
+-    **RMSE:** **4.83M** (much higher)
+
+-    **MAPE:** **35.84%**
+
+-    **Strength:** tries to model seasonality explicitly
+
+-    **Weakness:** unstable on post-COVID recovery → large forecast errors
+
+**Overall:** Seasonal ARIMA attempted complexity but failed due to disrupted seasonal pattern.
+
+**4. TBATS**
+
+TBATS is designed for series with structural breaks, flexible seasonality, and irregular patterns — exactly what this dataset has.
+
+-    **RMSE:** **2.11M** (best among all models)
+
+-    **MAPE:** **15.29%** (very similar to ARIMA/ETS but best RMSE)
+
+-    **Strength:** handles COVID disruption better than SARIMA
+
+-    **Weakness:** still slightly noisy due to volatile recovery behaviour
+
+**Overall:** The most adaptive model. Performs best in RMSE and gives the most stable forecast shape for 2025–2026.
+
+------------------------------------------------------------------------
+
+\newpage
+
+# Conclusion
+
+Across all models, the simple ARIMA(0,1,0) and ETS(A,N,N) surprisingly outperform the more complex SARIMA model on the 2023–2024 test period. This happens because the COVID-19 shock disrupts the seasonal pattern so strongly that seasonal ARIMA ends up overfitting and producing high forecast error. TBATS, however, is built for irregular seasonality and structural breaks, and it adapts best to the sharp fall and post-2021 recovery. As a result, TBATS delivers the lowest RMSE and the most stable short-term forecasts, making it the preferred model for final prediction of Dublin Bus demand.
