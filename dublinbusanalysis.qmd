@@ -456,23 +456,23 @@ fit_arima
 **Model chosen:**\
 `ARIMA(0,1,0)` → also known as a *random walk with drift removed*. This is the simplest ARIMA structure possible. It says:
 
--    the model applies **one difference** (d = 1)
+-   the model applies **one difference** (d = 1)
 
--    no autoregressive part (p = 0)
+-   no autoregressive part (p = 0)
 
--    no moving-average part (q = 0)
+-   no moving-average part (q = 0)
 
--    the differenced series behaves like pure noise
+-   the differenced series behaves like pure noise
 
 In plain English; **the model thinks the best predictor of the next month is simply the previous month**, plus random fluctuation.
 
 This happens because:
 
--    the series has a strong trend
+-   the series has a strong trend
 
--    seasonality was removed when you converted to multiplicative structure
+-   seasonality was removed when you converted to multiplicative structure
 
--    the pandemic shock made AR and MA terms unstable
+-   the pandemic shock made AR and MA terms unstable
 
 **AIC = 3285.79**\
 Lower AIC is better, and this is what ARIMA achieved.
@@ -529,15 +529,15 @@ y = "Passengers", x = "Year"
 
 In the second plot:
 
--    ETS also produces a flat prediction line
+-   ETS also produces a flat prediction line
 
--    uncertainty bands again widen due to the trend shock
+-   uncertainty bands again widen due to the trend shock
 
--    the fit to actual test data is slightly poorer than ARIMA
+-   the fit to actual test data is slightly poorer than ARIMA
 
--    ETS cannot capture trend recovery after COVID
+-   ETS cannot capture trend recovery after COVID
 
--    zero seasonality assumption makes the model too naive
+-   zero seasonality assumption makes the model too naive
 
 ETS(A,N,N) is too simple for this dataset; it lacks trend + seasonality. It performs **worse than ARIMA** in both AIC and visual accuracy.
 
@@ -545,20 +545,17 @@ ETS(A,N,N) is too simple for this dataset; it lacks trend + seasonality. It perf
 
 -   ARIMA outperformed ETS on both AIC and visual fit, but both models lack seasonality.
 
-```{=html}
 <!-- -->
-```
--    The reason is that the month order in the dataset is alphabetical, not chronological.
 
-```{=html}
-<!-- -->
-```
--    Reordering the months (Jan → Dec) will allow ARIMA and ETS to pick the correct seasonal structure.
+-   The reason is that the month order in the dataset is alphabetical, not chronological.
 
-```{=html}
 <!-- -->
-```
--    Once fixed, the seasonal ARIMA (SARIMA) model will likely outperform ETS on both short-term and long-term forecasts.
+
+-   Reordering the months (Jan → Dec) will allow ARIMA and ETS to pick the correct seasonal structure.
+
+<!-- -->
+
+-   Once fixed, the seasonal ARIMA (SARIMA) model will likely outperform ETS on both short-term and long-term forecasts.
 
 ## SARIMA Model
 
@@ -640,13 +637,13 @@ caption = "Forecast accuracy on 2023–2024 test period")
 This is the simplest possible ARIMA model — essentially a *random walk with one difference*.\
 It doesn’t include seasonal or autoregressive terms.
 
--    **RMSE:** 2.19M
+-   **RMSE:** 2.19M
 
--    **MAPE:** 15.12%
+-   **MAPE:** 15.12%
 
--    **Strength:** stable long-term level
+-   **Strength:** stable long-term level
 
--    **Weakness:** fails to capture seasonal peaks & troughs
+-   **Weakness:** fails to capture seasonal peaks & troughs
 
 **Overall:** Acceptable baseline but too simple for monthly bus data.
 
@@ -654,13 +651,13 @@ It doesn’t include seasonal or autoregressive terms.
 
 ETS selected an additive model with **no trend** and **no seasonality**, meaning it smooths the data but doesn’t learn any structure.
 
--    **RMSE:** 2.19M
+-   **RMSE:** 2.19M
 
--    **MAPE:** 15.12% (same as ARIMA)
+-   **MAPE:** 15.12% (same as ARIMA)
 
--    **Strength:** follows short-term movement well
+-   **Strength:** follows short-term movement well
 
--    **Weakness:** ignores both trend and seasonality entirely
+-   **Weakness:** ignores both trend and seasonality entirely
 
 **Overall:** Slightly smoother than ARIMA but equally simplistic.
 
@@ -670,13 +667,13 @@ This model includes seasonal differencing and seasonal AR terms, so it actively 
 
 However, because COVID caused a large structural break, SARIMA overfits the shock period and ends up performing *worse* on the test data.
 
--    **RMSE:** **4.83M** (much higher)
+-   **RMSE:** **4.83M** (much higher)
 
--    **MAPE:** **35.84%**
+-   **MAPE:** **35.84%**
 
--    **Strength:** tries to model seasonality explicitly
+-   **Strength:** tries to model seasonality explicitly
 
--    **Weakness:** unstable on post-COVID recovery → large forecast errors
+-   **Weakness:** unstable on post-COVID recovery → large forecast errors
 
 **Overall:** Seasonal ARIMA attempted complexity but failed due to disrupted seasonal pattern.
 
@@ -684,13 +681,13 @@ However, because COVID caused a large structural break, SARIMA overfits the shoc
 
 TBATS is designed for series with structural breaks, flexible seasonality, and irregular patterns — exactly what this dataset has.
 
--    **RMSE:** **2.11M** (best among all models)
+-   **RMSE:** **2.11M** (best among all models)
 
--    **MAPE:** **15.29%** (very similar to ARIMA/ETS but best RMSE)
+-   **MAPE:** **15.29%** (very similar to ARIMA/ETS but best RMSE)
 
--    **Strength:** handles COVID disruption better than SARIMA
+-   **Strength:** handles COVID disruption better than SARIMA
 
--    **Weakness:** still slightly noisy due to volatile recovery behaviour
+-   **Weakness:** still slightly noisy due to volatile recovery behaviour
 
 **Overall:** The most adaptive model. Performs best in RMSE and gives the most stable forecast shape for 2025–2026.
 
